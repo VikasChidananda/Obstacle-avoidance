@@ -198,15 +198,15 @@ class QuadcontrolEnv(DirectRLEnv):
         rewards = {
         }
         
-        reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
+        # reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
 
         if self.verbose: 
             print(f"rewards: {reward}")
 
-        # Logging
-        for key, value in rewards.items():
-            self._episode_sums[key] += value
-        return reward
+        # # Logging
+        # for key, value in rewards.items():
+        #     self._episode_sums[key] += value
+        return -1.0 * torch.ones(self.num_envs, device=self.device)  # dummy reward for now
 
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor]:
         time_out = self.episode_length_buf >= self.max_episode_length - 1
