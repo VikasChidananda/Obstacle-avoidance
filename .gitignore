@@ -108,3 +108,4 @@ events*
 /stable-baselines3/
 browse*
 /multirun/*
+/logs/*

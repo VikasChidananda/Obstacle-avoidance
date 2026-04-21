@@ -1,9 +1,9 @@
 # SS26 Drone control for various trajectory tracking tasks
 
-[![IsaacSim](https://img.shields.io/badge/IsaacSim-5.0-silver.svg)](https://docs.isaacsim.omniverse.nvidia.com/4.5.0/index.html)
+[![IsaacSim](https://img.shields.io/badge/IsaacSim-4.5.0-silver.svg)](https://docs.isaacsim.omniverse.nvidia.com/4.5.0/index.html)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://docs.python.org/3/whatsnew/3.11.html)
 [![Linux platform](https://img.shields.io/badge/platform-linux--64-orange.svg)](https://releases.ubuntu.com/22.04/)
-[![IsaacLab](https://img.shields.io/badge/IsaacLab-2.2.0-black.svg)](https://isaac-sim.github.io/IsaacLab/v2.2.0/index.html)
+[![IsaacLab](https://img.shields.io/badge/IsaacLab-2.1.0-black.svg)](https://isaac-sim.github.io/IsaacLab/v2.1.0/index.html)
 
 ## Overview
 
@@ -38,7 +38,7 @@ We provide the following trajectories that are parametrizable in your training.
 
 ## Installation
 
-- Install Isaac Lab by following the [installation guide](https://isaac-sim.github.io/IsaacLab/v2.2.0/source/setup/installation/pip_installation.html).
+- Install Isaac Lab by following the [installation guide](https://isaac-sim.github.io/IsaacLab/v2.1.0/source/setup/installation/pip_installation.html).
   We recommend using the conda installation as it simplifies calling Python scripts from the terminal.
 
 - Clone or copy this project/repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
