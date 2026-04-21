@@ -16,16 +16,22 @@ We provide the following trajectories that are parametrizable in your training.
  - Slalom
 
 
-https://github.com/user-attachments/assets/d4f061f6-16b8-4eb2-b6d4-737fa12fd142
+## Demo Videos
+
+### Circle trajectory
+
+<video controls width="720">
+  <source src="videos/circle.mp4" type="video/mp4">
+  Your browser does not support HTML video. Download it here: <a href="videos/circle.mp4">circle.mp4</a>
+</video>
 
 
-https://github.com/user-attachments/assets/3cc24494-ac0f-4d9c-9094-9fb7a60373e4
+### Hover trajectory
 
-
-https://github.com/user-attachments/assets/b2a6b986-2c99-4707-bfe2-5b82f8286b13
-
-
-https://github.com/user-attachments/assets/77fa0c3b-d63c-4daa-85d3-d2f79c7468ad
+<video controls width="720">
+  <source src="videos/hover.mp4" type="video/mp4">
+  Your browser does not support HTML video. Download it here: <a href="videos/hover.mp4">hover.mp4</a>
+</video>
 
 
 
