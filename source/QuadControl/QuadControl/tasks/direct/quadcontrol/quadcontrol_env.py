@@ -190,25 +190,19 @@ class QuadcontrolEnv(DirectRLEnv):
         return observations
 
     def _get_rewards(self) -> torch.Tensor:
-        lin_vel = torch.sum(torch.square(self._robot.data.root_lin_vel_b), dim=1)
-        ang_vel = torch.sum(torch.square(self._robot.data.root_ang_vel_b), dim=1)
-        distance_to_goal = torch.linalg.norm(self._desired_pos_w - self._robot.data.root_pos_w, dim=1)
-        distance_to_goal_mapped = 1 - torch.tanh(distance_to_goal / 0.8)
-        action_penalty = torch.sum(torch.square(self._actions - self.previous_actions), dim=1)
+        # YOUR AWESOME REWARD FUNCTION HERE
+
         
+
+        # REWARDS AS DICT
         rewards = {
-            "lin_vel": lin_vel * self.cfg.lin_vel_reward_scale * self.step_dt,
-            "ang_vel": ang_vel * self.cfg.ang_vel_reward_scale * self.step_dt,
-            "distance_to_goal": distance_to_goal_mapped * self.cfg.distance_to_goal_reward_scale * self.step_dt,
-            # "action_penalty": -0.01 * action_penalty * self.step_dt
         }
         
         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
-        # reward = torch.clip(reward, -1.0, 1.0)
-        # reward = normalise_reward(reward)
 
         if self.verbose: 
             print(f"rewards: {reward}")
+
         # Logging
         for key, value in rewards.items():
             self._episode_sums[key] += value
