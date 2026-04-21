@@ -1,0 +1,11 @@
+{
+    "version": "1.0",
+    "file_records": [
+        {
+            "source_url": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Robots/Bitcraze/Crazyflie/.thumbs/cf2x.thumb.usd",
+            "source_hash": "4bde97ba3e7844106c0a332d7e9be31ab7ff1965",
+            "target_url": "./cf2x.thumb.usd",
+            "target_hash": "68d7af83f903bbad8d2aba89de5e8d115c0ce350"
+        }
+    ]
+}
