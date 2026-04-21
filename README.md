@@ -1,93 +1,107 @@
-# SS26-Drone-control
+# SS26 Drone control for various trajectory tracking tasks
+
+[![IsaacSim](https://img.shields.io/badge/IsaacSim-5.0-silver.svg)](https://docs.isaacsim.omniverse.nvidia.com/4.5.0/index.html)
+[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://docs.python.org/3/whatsnew/3.11.html)
+[![Linux platform](https://img.shields.io/badge/platform-linux--64-orange.svg)](https://releases.ubuntu.com/22.04/)
+[![IsaacLab](https://img.shields.io/badge/IsaacLab-2.2.0-black.svg)](https://isaac-sim.github.io/IsaacLab/v2.2.0/index.html)
+
+## Overview
+
+This project facilitates training policies for various trajectory tracking tasks. 
+We provide the following trajectories that are parametrizable in your training.
+ - Hover
+ - Line
+ - Circle
+ - Lemniscate
+ - Slalom
+
+
+https://github.com/user-attachments/assets/d4f061f6-16b8-4eb2-b6d4-737fa12fd142
+
+
+https://github.com/user-attachments/assets/3cc24494-ac0f-4d9c-9094-9fb7a60373e4
+
+
+https://github.com/user-attachments/assets/b2a6b986-2c99-4707-bfe2-5b82f8286b13
+
+
+https://github.com/user-attachments/assets/77fa0c3b-d63c-4daa-85d3-d2f79c7468ad
 
 
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://git.uni-paderborn.de/rat-teaching/ss26-drone-control.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-* [Set up project integrations](https://git.uni-paderborn.de/rat-teaching/ss26-drone-control/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- Install Isaac Lab by following the [installation guide](https://isaac-sim.github.io/IsaacLab/v2.2.0/source/setup/installation/pip_installation.html).
+  We recommend using the conda installation as it simplifies calling Python scripts from the terminal.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- Clone or copy this project/repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- Using a python interpreter that has Isaac Lab installed, install the library in editable mode using:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+    ```bash
+    # use 'PATH_TO_isaaclab.sh -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
+    python -m pip install -e source/QuadControl
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+- Verify that the extension is correctly installed by:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+    - Listing the available tasks:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+        Note: It the task name changes, it may be necessary to update the search pattern `"Quadcontrol-"`
+        (in the `scripts/list_envs.py` file) so that it can be listed.
 
-## License
-For open source projects, say how it is licensed.
+        ```bash
+        # use 'FULL_PATH_TO_isaaclab.sh -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
+        python scripts/list_envs.py
+        ```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+    - Running a task:
+
+        ```bash
+        # use 'FULL_PATH_TO_isaaclab.sh -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
+        python scripts/<RL_LIBRARY>/train.py --task=<TASK_NAME>
+
+        # for example
+        python scripts/skrl/train.py --task Quadcontrol-v0 
+
+        # to train a specific trajectory
+        python scripts/skrl/train_custom.py --task Quadcontrol-Meta-v0 --traj_type circle
+        ```
+
+    - Running a task with dummy agents:
+
+        These include dummy agents that output zero or random agents. They are useful to ensure that the environments are configured correctly.
+
+        - Zero-action agent
+
+            ```bash
+            # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
+            python scripts/zero_agent.py --task=<TASK_NAME>
+            ```
+        - Random-action agent
+
+            ```bash
+            # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
+            python scripts/random_agent.py --task=<TASK_NAME>
+            ```
+
+### Set up IDE (Optional)
+
+To setup the IDE, please follow these instructions:
+
+- Run VSCode Tasks, by pressing `Ctrl+Shift+P`, selecting `Tasks: Run Task` and running the `setup_python_env` in the drop down menu.
+  When running this task, you will be prompted to add the absolute path to your Isaac Sim installation.
+
+If everything executes correctly, it should create a file .python.env in the `.vscode` directory.
+The file contains the python paths to all the extensions provided by Isaac Sim and Omniverse.
+This helps in indexing all the python modules for intelligent suggestions while writing code.
+
+
+### To cite us
+```
+@misc{Chidananda_2025,
+  author = {Chidananda, Vikas},
+  title = {Trajectory Tracking for Quadrotors in IsaacLab},
+  year = {2025},
+}
+```
