@@ -5,11 +5,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import gymnasium as gym
 import isaaclab.sim as sim_utils
 import torch
-from pathlib import Path
-
 from isaaclab.assets import Articulation, ArticulationCfg
 from isaaclab.envs import DirectRLEnv, DirectRLEnvCfg
 from isaaclab.envs.ui import BaseEnvWindow
@@ -20,9 +20,9 @@ from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.math import subtract_frame_transforms
 
-
 # from isaaclab_assets import CRAZYFLIE_CFG  # isort: skip
 from ..robots.quadcopter import CRAZYFLIE_CFG
+
 
 class QuadcontrolEnvWindow(BaseEnvWindow):
     """Window manager for the Quadcopter environment."""
@@ -49,6 +49,7 @@ class QuadcontrolEnvCfg(DirectRLEnvCfg):
     # env
     decimation = 4
     episode_length_s = 10.0
+
     # - spaces definition
     action_space = 4
     observation_space = 12
@@ -105,5 +106,3 @@ class QuadcontrolEnvCfg(DirectRLEnvCfg):
     # desired_pos_x = [-2.0, 2.0]
     # desired_pos_y = [-2.0, 2.0]
     # desired_pos_z = [0.5, 1.5]
-
-
