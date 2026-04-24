@@ -44,6 +44,39 @@ gym.register(
 
 
 gym.register(
+    id="Quadcontrol-SymmAugC4-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugC4RunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-SymmAugTheta-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugThetaRunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-SymmAugContinuous-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugContinuousRunnerCfg",
+    },
+)
+
+
+gym.register(
     id="Quadcontrol-MirrorLoss-v0",
     entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
     disable_env_checker=True,

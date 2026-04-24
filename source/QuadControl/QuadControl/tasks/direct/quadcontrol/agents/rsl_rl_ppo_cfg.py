@@ -11,7 +11,12 @@ from isaaclab_rl.rsl_rl import (
     RslRlSymmetryCfg,
 )
 
-from ..symmetry import yaw_equivariant_augmentation
+from ..symmetry import (
+    yaw_equivariant_augmentation,
+    yaw_equivariant_augmentation_c4,
+    yaw_equivariant_augmentation_discretized,
+    yaw_equivariant_augmentation_continuous,
+)
 
 
 def _base_ppo_algorithm_cfg() -> RslRlPpoAlgorithmCfg:
@@ -55,6 +60,45 @@ class PPOSymmAugRunnerCfg(PPORunnerCfg):
             use_data_augmentation=True,
             use_mirror_loss=False,
             data_augmentation_func=yaw_equivariant_augmentation,
+            mirror_loss_coeff=0.0,
+        )
+    )
+
+
+@configclass
+class PPOSymmAugC4RunnerCfg(PPORunnerCfg):
+    experiment_name = "symmetry/aug_only_c4"
+    algorithm = _base_ppo_algorithm_cfg().replace(
+        symmetry_cfg=RslRlSymmetryCfg(
+            use_data_augmentation=True,
+            use_mirror_loss=False,
+            data_augmentation_func=yaw_equivariant_augmentation_c4,
+            mirror_loss_coeff=0.0,
+        )
+    )
+
+
+@configclass
+class PPOSymmAugThetaRunnerCfg(PPORunnerCfg):
+    experiment_name = "symmetry/aug_only_theta"
+    algorithm = _base_ppo_algorithm_cfg().replace(
+        symmetry_cfg=RslRlSymmetryCfg(
+            use_data_augmentation=True,
+            use_mirror_loss=False,
+            data_augmentation_func=yaw_equivariant_augmentation_discretized,
+            mirror_loss_coeff=0.0,
+        )
+    )
+
+
+@configclass
+class PPOSymmAugContinuousRunnerCfg(PPORunnerCfg):
+    experiment_name = "symmetry/aug_only_continuous"
+    algorithm = _base_ppo_algorithm_cfg().replace(
+        symmetry_cfg=RslRlSymmetryCfg(
+            use_data_augmentation=True,
+            use_mirror_loss=False,
+            data_augmentation_func=yaw_equivariant_augmentation_continuous,
             mirror_loss_coeff=0.0,
         )
     )

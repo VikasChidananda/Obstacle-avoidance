@@ -92,6 +92,7 @@ class QuadcontrolEnvCfg(DirectRLEnvCfg):
     # custom parameters/scales
     thrust_to_weight = 1.9
     moment_scale = 0.01
+    yaw_discretisations = 4
 
     # reward scales
     lin_vel_reward_scale = -0.05
