@@ -1,12 +1,7 @@
 import copy
 import logging
-
-from skrl.utils.runner.torch.runner import Runner
-from skrl import logger
-
-from typing import Any, Mapping, Type, Union
-
-import copy
+from typing import Any, Type, Union
+from collections.abc import Mapping
 
 from skrl import logger
 from skrl.agents.torch import Agent
@@ -17,6 +12,7 @@ from skrl.resources.preprocessors.torch import RunningStandardScaler  # noqa
 from skrl.resources.schedulers.torch import KLAdaptiveLR  # noqa
 from skrl.trainers.torch import Trainer
 from skrl.utils import set_seed
+from skrl.utils.runner.torch.runner import Runner
 
 
 class CustomRunner(Runner):
@@ -25,18 +21,19 @@ class CustomRunner(Runner):
         logger.info("Initialized CustomRunner with config:")
         # logger.info(cfg)
 
-
     def _component(self, name: str):  # type: ignore[override]
         # Map meta_ppo identifiers to PPO and its default config
         lname = name.lower()
         if lname in ("ppo", "custom"):
             # Reuse PPO components from skrl
             from QuadControl.meta_rl.algos.custom_ppo import CustomPPO
+
             print("Using CustomPPO")
             return CustomPPO
-        
+
         elif lname in ("spo"):
             from QuadControl.meta_rl.algos.spo import SPO
+
             print("Using SPO")
             return SPO
 
@@ -44,6 +41,7 @@ class CustomRunner(Runner):
         elif lname in ("metatrainer"):
             # Reuse PPO components from skrl
             from QuadControl.meta_rl.meta_trainer_maml import MetaTrainer
+
             print("Using MetaTrainer")
             return MetaTrainer
         # fallback to the base resolution
@@ -72,12 +70,10 @@ class CustomRunner(Runner):
     #         cfg["agent"]["class"] = "spo"
     #         print(f"CustomRunner using SPO")
     #     return super()._generate_agent(env, cfg, models)
-    
-    
-    
+
     def _generate_agent(
         self,
-        env: Union[Wrapper, MultiAgentEnvWrapper],
+        env: Wrapper | MultiAgentEnvWrapper,
         cfg: Mapping[str, Any],
         models: Mapping[str, Mapping[str, Model]],
     ) -> Agent:
@@ -100,8 +96,8 @@ class CustomRunner(Runner):
         print(f"-------------------------------------cfg : {cfg}")
         agent_class = cfg.get("agent", {}).get("class", "").lower()
 
-# for custom agent handlinig of specific configs for my implementation
-# -------------------------------------------------------------------------------------------------------
+        # for custom agent handlinig of specific configs for my implementation
+        # -------------------------------------------------------------------------------------------------------
         if isinstance(agent_class, str) and agent_class.lower() == "custom":
             cfg = copy.deepcopy(cfg)
             # Preserve original for logging but use PPO under the hood
@@ -115,7 +111,7 @@ class CustomRunner(Runner):
 
         if not agent_class:
             raise ValueError(f"No 'class' field defined in 'agent' cfg")
-# -------------------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------
 
         # check for memory configuration (backward compatibility)
         if not "memory" in cfg:
@@ -137,8 +133,7 @@ class CustomRunner(Runner):
         for agent_id in possible_agents:
             memories[agent_id] = memory_class(num_envs=num_envs, device=device, **self._process_cfg(cfg["memory"]))
 
-
-# Taken care of by the source implementation of _generate_agent in Runner, but left here for reference and potential future use
+        # Taken care of by the source implementation of _generate_agent in Runner, but left here for reference and potential future use
 
         # # single-agent configuration and instantiation
         # if agent_class in ["amp"]:
@@ -186,8 +181,6 @@ class CustomRunner(Runner):
         #         "collect_reference_motions": lambda num_samples: env.collect_reference_motions(num_samples),
         #     }
 
-
-
         if agent_class in ["custom", "spo"]:
             agent_id = possible_agents[0]
             agent_cfg = self._component(f"PPO_DEFAULT_CONFIG").copy()
@@ -196,7 +189,7 @@ class CustomRunner(Runner):
                 {"size": observation_spaces[agent_id], "device": device}
             )
             agent_cfg.get("value_preprocessor_kwargs", {}).update({"size": 1, "device": device})
-            
+
             if agent_cfg.get("exploration", {}).get("noise", None):
                 agent_cfg["exploration"].get("noise_kwargs", {}).update({"device": device})
                 agent_cfg["exploration"]["noise"] = agent_cfg["exploration"]["noise"](
@@ -208,9 +201,8 @@ class CustomRunner(Runner):
                     **agent_cfg.get("smooth_regularization_noise_kwargs", {})
                 )
 
-
             print(f"---------------------------------------------------------CustomRunner agent cfg: {agent_cfg}")
-            
+
             agent_kwargs = {
                 "models": models[agent_id],
                 "memory": memories[agent_id],
@@ -281,15 +273,10 @@ class CustomRunner(Runner):
         #     }
         #     print(f"Agent kwargs: {agent_kwargs}")
         #     print(f"Agent cfg: {agent_cfg}")
-            
+
         return super._generate_agent(env, cfg, models)
 
-
-
-        
-    def _generate_trainer(
-        self, env, cfg, agent
-    ):
+    def _generate_trainer(self, env, cfg, agent):
         """Generate trainer instance according to the environment specification and the given config and agent
 
         :param env: Wrapped environment

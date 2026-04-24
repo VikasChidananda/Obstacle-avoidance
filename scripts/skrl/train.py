@@ -75,17 +75,12 @@ parser.add_argument(
     help="Experiment type to be included in agent directory names",
 )
 
-parser.add_argument(
-    "--eval_log",
-    action="store_true",
-    default=False,
-    help="Whether to log evaluation trajectories."
-)
+parser.add_argument("--eval_log", action="store_true", default=False, help="Whether to log evaluation trajectories.")
 
 
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
- #parsi the arguments
+# parsi the arguments
 args_cli, hydra_args = parser.parse_known_args()
 # always enable cameras to record video
 if args_cli.video:
@@ -141,7 +136,6 @@ from isaaclab.utils.io import dump_pickle, dump_yaml
 from isaaclab_rl.skrl import SkrlVecEnvWrapper
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
-
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
 agent_cfg_entry_point = "skrl_cfg_entry_point" if algorithm in ["ppo"] else f"skrl_{algorithm}_cfg_entry_point"
@@ -194,7 +188,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Logging experiment in directory: {log_root_path}")
     # specify directory for logging runs: {time-stamp}_{run_name}
-    log_dir = f"{args_cli.traj_type}_{algorithm}_{args_cli.ml_framework}_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_dir = f"{args_cli.traj_type}_{algorithm}_{args_cli.ml_framework}_" + datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
     # The Ray Tune workflow extracts experiment name using the logging line below, hence, do not change it (see PR #2346, comment-2819298849)
     print(f"Exact experiment name requested from command line: {log_dir}")
     if agent_cfg["agent"]["experiment"]["experiment_name"]:

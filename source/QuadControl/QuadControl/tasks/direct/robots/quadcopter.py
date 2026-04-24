@@ -8,17 +8,16 @@
 from __future__ import annotations
 
 import os
+
 import isaaclab.sim as sim_utils
 from isaaclab.actuators import ImplicitActuatorCfg
 from isaaclab.assets import ArticulationCfg
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 
-
 try:
     # usd_path = f"{ISAAC_NUCLEUS_DIR}/Robots/Bitcraze/Crazyflie/cf2x.usd"
 
-
-# except Exception as e:
+    # except Exception as e:
     # raise RuntimeError("ISAAC_NUCLEUS_DIR is not set. Please set the environment variable.") from e
     # get path for crazyflie in assets
     curr_dir = os.path.dirname(os.path.abspath(__file__))

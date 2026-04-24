@@ -77,7 +77,7 @@ class TrajectoryGenerator:
 
         if (self.trajectory_type is None) or (self.randomise_family):
             self.trajectory_type = np.random.choice(self.task_families)
-           
+
         print(f"Selected trajectory type: {self.trajectory_type}")
 
         if self.randomise_task:
@@ -89,7 +89,6 @@ class TrajectoryGenerator:
                 self.params[self.trajectory_type][param] = torch.full_like(
                     time, fill_value=param_dict[param], device=self.device
                 )
-            
 
     def _get_params(self, time, partial=False):
         param_dict = config[self.trajectory_type]
@@ -99,25 +98,20 @@ class TrajectoryGenerator:
             t_subset = time[indices]
 
             for param, (low, high) in param_dict.items():
-                self.params[self.trajectory_type][param][indices] = torch.zeros_like(t_subset).uniform_(
-                    low, high
-                )
+                self.params[self.trajectory_type][param][indices] = torch.zeros_like(t_subset).uniform_(low, high)
                 # print(
-                    # f"Randomized {self.trajectory_type} param {param} to {self.params[self.trajectory_type][param]}"
+                # f"Randomized {self.trajectory_type} param {param} to {self.params[self.trajectory_type][param]}"
                 # )
         else:
             print("Full randomization of trajectory parameters.")
             for param, (low, high) in param_dict.items():
-                self.params[self.trajectory_type][param] = torch.zeros_like(time).uniform_(
-                    low, high
-                )
-
+                self.params[self.trajectory_type][param] = torch.zeros_like(time).uniform_(low, high)
 
     def update(self, dt):
         self.time += dt
 
     def circle(self, t, center=(0.0, 0.0, 0.5)):
-        if (t==0.0).any():
+        if (t == 0.0).any():
             self._get_params(t, partial=True)
 
         r = self.params["circle"]["radius"]
@@ -131,7 +125,7 @@ class TrajectoryGenerator:
         return torch.stack((x, y, z), dim=1).squeeze()
 
     def lemniscate(self, t, center=(0, 0, 0.5)):
-        if (t==0.0).any():
+        if (t == 0.0).any():
             self._get_params(t, partial=True)
 
         a = self.params["lemniscate"]["a"]
@@ -170,29 +164,26 @@ class TrajectoryGenerator:
         return torch.stack((x, y, z), dim=-1).squeeze()
 
     def straight(self, t):
-        if (t==0.0).any():
+        if (t == 0.0).any():
             self._get_params(t, partial=True)
-
 
         x, y = self.params["straight"]["x"], self.params["straight"]["y"]
         speed = self.params["straight"]["speed"]
 
-        next_waypoint = torch.concat(
-            (
-                x * speed,
-                y * speed,
-                torch.zeros_like(speed),
-            )
-        ).reshape(3, -1)
+        next_waypoint = torch.concat((
+            x * speed,
+            y * speed,
+            torch.zeros_like(speed),
+        )).reshape(3, -1)
         time_step = torch.floor(t / 0.034).reshape(1, -1)
         pos = next_waypoint * time_step
         return pos.T
-    
+
     def hover(self, t):
         # """
         # rand is static, static is rand
         # """
-        if (t==0.0).any():
+        if (t == 0.0).any():
             self._get_params(t, partial=True)
             # print("Resetting hover trajectory parameters.")
             # reset hover positions for those time steps
@@ -201,7 +192,7 @@ class TrajectoryGenerator:
             # self.params["hover"]["x"][indices] = torch.zeros_like(t_subset).uniform_(-2.0, 2.0)
             # self.params["hover"]["y"][indices] = torch.zeros_like(t_subset).uniform_(-2.0, 2.0)
             # self.params["hover"]["height"][indices] = torch.zeros_like(t_subset).uniform_(0.5, 1.5)
-        
+
         # print("Here in hover trajectory generation.")
         x = self.params["hover"]["x"]
         y = self.params["hover"]["y"]

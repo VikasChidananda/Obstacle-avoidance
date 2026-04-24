@@ -1,32 +1,30 @@
-from typing import Any, Mapping, Optional, Tuple, Union
-
 import copy
 import itertools
-import gymnasium
-from packaging import version
+from typing import Any, Optional, Tuple, Union
+from collections.abc import Mapping
 
+import gymnasium
+import higher  # for differentiable optimization in the inner loop
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import higher # for differentiable optimization in the inner loop
-
+from packaging import version
 from skrl import config, logger
 from skrl.agents.torch import Agent
+from skrl.agents.torch.ppo import PPO
 from skrl.memories.torch import Memory
 from skrl.models.torch import Model
 from skrl.resources.schedulers.torch import KLAdaptiveLR
 
-from skrl.agents.torch.ppo import PPO
-
-# This ppo has to create an update loop that 
+# This ppo has to create an update loop that
 #  preserves the computation graph for the inner loop updates, so that we can backprop through it in the outer loop.
+
 
 class SPO(PPO):
     def __init__(
         self,
         models,
-        memory, 
+        memory,
         observation_space,
         action_space,
         device,
@@ -34,8 +32,7 @@ class SPO(PPO):
     ):
         super().__init__(models, memory, observation_space, action_space, device, cfg)
 
-
-# updating the PPO update loop to preserve the computation graph for inner loop updates
+    # updating the PPO update loop to preserve the computation graph for inner loop updates
 
     def _update(self, timestep: int, timesteps: int) -> None:
         """Algorithm's main update step
@@ -103,7 +100,7 @@ class SPO(PPO):
             last_values = self._value_preprocessor(last_values, inverse=True)
 
         values = self.memory.get_tensor_by_name("values")
-        
+
         returns, advantages = compute_gae(
             rewards=self.memory.get_tensor_by_name("rewards"),
             dones=self.memory.get_tensor_by_name("terminated") | self.memory.get_tensor_by_name("truncated"),
@@ -188,9 +185,6 @@ class SPO(PPO):
 
                     # SPO policy loss:
 
-
-                    
-
                     # compute value loss
                     predicted_values, _, _ = self.value.act({"states": sampled_states}, role="value")
 
@@ -199,7 +193,6 @@ class SPO(PPO):
                             predicted_values - sampled_values, min=-self._value_clip, max=self._value_clip
                         )
                     value_loss = self._value_loss_scale * F.mse_loss(sampled_returns, predicted_values)
-
 
                 # optimization step
                 self.optimizer.zero_grad()
@@ -252,9 +245,3 @@ class SPO(PPO):
 
         if self._learning_rate_scheduler:
             self.track_data("Learning / Learning rate", self.scheduler.get_last_lr()[0])
-
-
-    
-
-
-    

@@ -20,14 +20,14 @@ experiment=v_max_test
 
 
 for traj in "${TRAJ_TYPE[@]}"
-do    
+do
     echo "training $traj"
     for SEED in "${SEEDS[@]}"
         do
             echo "training with seed $SEED"
             python train.py --task Quadcontrol-meta-v0 --seed $SEED --traj_type $traj \
             --max_iterations 300 --video --distributed --headless --experiment ${experiment}/${traj}
-        done 
+        done
 done
 
 
@@ -39,12 +39,12 @@ done
 # done
 
 # for traj in "${TRAJ_TYPE[@]}"
-# do    
+# do
 #     echo "training $traj"
 #     for SEED in "${SEEDS[@]}"
 #         do
 #             echo "training with seed $SEED"
-#             python train.py --task Quadcontrol-meta-v0 --seed $SEED --traj_type $traj --max_iterations 1000 --video --distributed --headless --experiment baseline_a_$traj 
+#             python train.py --task Quadcontrol-meta-v0 --seed $SEED --traj_type $traj --max_iterations 1000 --video --distributed --headless --experiment baseline_a_$traj
 #         done
 # done
 

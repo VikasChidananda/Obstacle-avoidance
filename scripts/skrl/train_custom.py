@@ -65,14 +65,14 @@ parser.add_argument(
     type=float,
     default=0.02,
     help="Outerloop learning rate for meta-RL algorithms.",
-)  
+)
 parser.add_argument(
     "--train_base",
     action="store_true",
     default=False,
     help="Whether to train the base policy before meta-learning.",
 )
-# add curriculum learning flag - 0 - hover, 1 - line, 2 - circle, 
+# add curriculum learning flag - 0 - hover, 1 - line, 2 - circle,
 # 1. randomize trajecotry family: 001, 012, 220, 110,....
 # 2. stratified randomization: 012, 210, 201, ...
 # 3. sequential curriculum: 012, 012, 012, ...
@@ -104,7 +104,6 @@ simulation_app = app_launcher.app
 # https://github.com/isaac-sim/IsaacLab/issues/2729: to enbale livestream
 # Filter out AppLauncher-injected args before Hydra sees them
 sys.argv = [sys.argv[0]] + [arg for arg in hydra_args if not arg.startswith("--/")]
-
 
 
 """Rest everything follows."""
@@ -148,7 +147,6 @@ from isaaclab_tasks.utils.hydra import hydra_task_config
 
 # custom imports
 from QuadControl.utils.custom_runner import CustomRunner
-
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
@@ -197,13 +195,15 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Logging experiment in directory: {log_root_path}")
     # specify directory for logging runs: {time-stamp}_{run_name}
-    log_dir = f"{args_cli.traj_type}_{algorithm}_{args_cli.ml_framework}_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    
+    log_dir = f"{args_cli.traj_type}_{algorithm}_{args_cli.ml_framework}_" + datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+
     # The Ray Tune workflow extracts experiment name using the logging line below, hence, do not change it (see PR #2346, comment-2819298849)
     print(f"Exact experiment name requested from command line: {log_dir}")
     if agent_cfg["agent"]["experiment"]["experiment_name"]:
         log_dir += f'_{agent_cfg["agent"]["experiment"]["experiment_name"]}'
-    
+
     # set directory into agent config
     agent_cfg["agent"]["experiment"]["directory"] = log_root_path
     agent_cfg["agent"]["experiment"]["experiment_name"] = log_dir
@@ -212,7 +212,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     agent_cfg["agent"]["meta_learning_rate"] = args_cli.meta_lr
     agent_cfg["agent"]["train_base_policy"] = args_cli.train_base
     agent_cfg["agent"]["curriculum"] = args_cli.curriculum
-    # --------------------------------------------------------------------------------------------- 
+    # ---------------------------------------------------------------------------------------------
 
     # update log_dir
     log_dir = os.path.join(log_root_path, log_dir)
@@ -249,7 +249,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     env = SkrlVecEnvWrapper(env, ml_framework=args_cli.ml_framework)  # same as: `wrap_env(env, wrapper="auto")
     # print(env.action_space, env.observation_space)
 
-
     # configure and instantiate the skrl runner
     # https://skrl.readthedocs.io/en/latest/api/utils/runner.html
     if algorithm in ["custom", "meta", "spo"]:
@@ -257,7 +256,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         runner = CustomRunner(env, agent_cfg)
     else:
         runner = Runner(env, agent_cfg)
-    
 
     # load checkpoint (if specified)
     if resume_path:

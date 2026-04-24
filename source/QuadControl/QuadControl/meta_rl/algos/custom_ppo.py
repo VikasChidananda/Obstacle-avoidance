@@ -1,32 +1,30 @@
-from typing import Any, Mapping, Optional, Tuple, Union
-
 import copy
 import itertools
-import gymnasium
-from packaging import version
+from typing import Any, Optional, Tuple, Union
+from collections.abc import Mapping
 
+import gymnasium
+import higher  # for differentiable optimization in the inner loop
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import higher # for differentiable optimization in the inner loop
-
+from packaging import version
 from skrl import config, logger
 from skrl.agents.torch import Agent
+from skrl.agents.torch.ppo import PPO
 from skrl.memories.torch import Memory
 from skrl.models.torch import Model
 from skrl.resources.schedulers.torch import KLAdaptiveLR
 
-from skrl.agents.torch.ppo import PPO
-
-# This ppo has to create an update loop that 
+# This ppo has to create an update loop that
 #  preserves the computation graph for the inner loop updates, so that we can backprop through it in the outer loop.
+
 
 class CustomPPO(PPO):
     def __init__(
         self,
         models,
-        memory, 
+        memory,
         observation_space,
         action_space,
         device,
@@ -34,7 +32,6 @@ class CustomPPO(PPO):
     ):
         self._update_mode = cfg.get("update_mode", "maml")  # "differentiable" or "standard"
         super().__init__(models, memory, observation_space, action_space, device, cfg)
-
 
     def compute_gae(
         self,
@@ -72,9 +69,7 @@ class CustomPPO(PPO):
         for i in reversed(range(memory_size)):
             next_values = values[i + 1] if i < memory_size - 1 else values[i]
             advantage = (
-                rewards[i]
-                - values[i]
-                + discount_factor * not_dones[i] * (next_values + lambda_coefficient * advantage)
+                rewards[i] - values[i] + discount_factor * not_dones[i] * (next_values + lambda_coefficient * advantage)
             )
             advantages[i] = advantage
         # returns computation
@@ -84,8 +79,7 @@ class CustomPPO(PPO):
 
         return returns, advantages
 
-
-# updating the PPO update loop to preserve the computation graph for inner loop updates
+    # updating the PPO update loop to preserve the computation graph for inner loop updates
     def _update(self, timestep: int, timesteps: int) -> None:
         """Algorithm's main update step
 
@@ -108,7 +102,7 @@ class CustomPPO(PPO):
             last_values = self._value_preprocessor(last_values, inverse=True)
 
         values = self.memory.get_tensor_by_name("values")
-        
+
         returns, advantages = self.compute_gae(
             rewards=self.memory.get_tensor_by_name("rewards"),
             dones=self.memory.get_tensor_by_name("terminated") | self.memory.get_tensor_by_name("truncated"),
@@ -157,9 +151,9 @@ class CustomPPO(PPO):
                         policy=self.policy,
                         value=self.value,
                         kl_divergences=kl_divergences,
-                        epoch=epoch
+                        epoch=epoch,
                     )
-                    
+
                     # elif differentiable:
                     #     # for maml, we need to perform inner loop updates on the meta-batch of tasks, and then compute the loss on the query set using the adapted parameters.
                     #     policy_loss, value_loss, entropy_loss = self.differentiable_inner_update(
@@ -245,27 +239,23 @@ class CustomPPO(PPO):
 
         # return fpolicy, fvalue, {}
 
-
     def _compute_loss(
-            self,
-            sampled_states,
-            sampled_actions,
-            sampled_log_prob,
-            sampled_values,
-            sampled_returns,
-            sampled_advantages,
-            policy,
-            value,
-            kl_divergences,
-            epoch
-        ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Compute the PPO loss
-        """
+        self,
+        sampled_states,
+        sampled_actions,
+        sampled_log_prob,
+        sampled_values,
+        sampled_returns,
+        sampled_advantages,
+        policy,
+        value,
+        kl_divergences,
+        epoch,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Compute the PPO loss"""
         sampled_states = self._state_preprocessor(sampled_states, train=not epoch)
 
-        _, next_log_prob, _ = policy.act(
-            {"states": sampled_states, "taken_actions": sampled_actions}, role="policy"
-        )
+        _, next_log_prob, _ = policy.act({"states": sampled_states, "taken_actions": sampled_actions}, role="policy")
 
         # compute entropy loss
         if self._entropy_loss_scale:
@@ -276,9 +266,7 @@ class CustomPPO(PPO):
         # compute policy loss
         ratio = torch.exp(next_log_prob - sampled_log_prob)
         surrogate = sampled_advantages * ratio
-        surrogate_clipped = sampled_advantages * torch.clip(
-            ratio, 1.0 - self._ratio_clip, 1.0 + self._ratio_clip
-        )
+        surrogate_clipped = sampled_advantages * torch.clip(ratio, 1.0 - self._ratio_clip, 1.0 + self._ratio_clip)
 
         policy_loss = -torch.min(surrogate, surrogate_clipped).mean()
 
@@ -292,14 +280,11 @@ class CustomPPO(PPO):
         value_loss = self._value_loss_scale * F.mse_loss(sampled_returns, predicted_values)
 
         return policy_loss, value_loss, entropy_loss
-    
 
     def build_batch_from_rollout(self, rollout):
         with torch.no_grad():
             last_states = rollout["next_states"][-1]
-            last_values, _, _ = self.value.act(
-                {"states": self._state_preprocessor(last_states.float())}, role="value"
-            )
+            last_values, _, _ = self.value.act({"states": self._state_preprocessor(last_states.float())}, role="value")
             last_values = self._value_preprocessor(last_values, inverse=True)
 
         values = rollout["values"]
@@ -321,14 +306,7 @@ class CustomPPO(PPO):
         }
         return batch
 
-    def differentiable_inner_update(
-            self,
-            batch,
-            inner_steps,
-            inner_lr,
-            track_higher_grads: bool = True
-    ):
-        
+    def differentiable_inner_update(self, batch, inner_steps, inner_lr, track_higher_grads: bool = True):
         """Perform differentiable inner loop updates on the meta-batch of tasks.
 
         Args:
@@ -359,8 +337,10 @@ class CustomPPO(PPO):
             value_optimizer,
             copy_initial_weights=False,
             track_higher_grads=track_higher_grads,
-        ) as (fvalue, diff_value_opt):
-
+        ) as (
+            fvalue,
+            diff_value_opt,
+        ):
 
             # perform inner loop updates for the current task
             for _ in range(inner_steps):
@@ -374,10 +354,10 @@ class CustomPPO(PPO):
                     policy=fpolicy,
                     value=fvalue,
                     kl_divergences=[],
-                    epoch=0
+                    epoch=0,
                 )
 
-                # entropy_loss = 
+                # entropy_loss =
 
                 inner_loss = policy_loss + value_loss + entropy_loss
 
@@ -391,7 +371,7 @@ class CustomPPO(PPO):
                 })
 
         return fpolicy, fvalue, logs
-    
+
     def compute_query_loss(self, query_batch, policy, value):
 
         policy_loss, value_loss, entropy_loss = self._compute_loss(
@@ -437,7 +417,7 @@ class CustomPPO(PPO):
             last_values = self._value_preprocessor(last_values, inverse=True)
 
         values = self.memory.get_tensor_by_name("values")
-        
+
         returns, advantages = self.compute_gae(
             rewards=self.memory.get_tensor_by_name("rewards"),
             dones=self.memory.get_tensor_by_name("terminated") | self.memory.get_tensor_by_name("truncated"),
@@ -486,7 +466,7 @@ class CustomPPO(PPO):
                         policy=self.policy,
                         value=self.value,
                         kl_divergences=kl_divergences,
-                        epoch=epoch
+                        epoch=epoch,
                     )
                     # elif differentiable:
                     #     # for maml, we need to perform inner loop updates on the meta-batch of tasks, and then compute the loss on the query set using the adapted parameters.
@@ -518,7 +498,6 @@ class CustomPPO(PPO):
                     #     inner_lr=self.meta_lr,
                     #     track_higher_grads=True
                     # )
-
 
                 # optimization step
                 self.optimizer.zero_grad()

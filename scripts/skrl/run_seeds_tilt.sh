@@ -20,7 +20,7 @@ fi
 # baselines_tilt
 
 for traj in "${TRAJ_TYPE[@]}"
-do    
+do
     echo "training $traj"
     for SEED in "${SEEDS[@]}"
         do
@@ -37,5 +37,5 @@ done
 # for SEED in "${SEEDS[@]}"
 # do
 #     echo "training with seed $SEED"
-#     python train.py --seed $SEED --task Quadcontrol-NoGoal-Direct-v0 --video --distributed --headless --max_iterations 300 --experiment goal_nogoal 
+#     python train.py --seed $SEED --task Quadcontrol-NoGoal-Direct-v0 --video --distributed --headless --max_iterations 300 --experiment goal_nogoal
 # done

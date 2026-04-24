@@ -13,16 +13,15 @@ a more user-friendly way.
 """Launch Isaac Sim Simulator first."""
 
 import argparse
-import sys
-
-import optuna
-from optuna.pruners import MedianPruner
-from optuna.samplers import TPESampler
 import os
 import random
+import sys
 from datetime import datetime
 
+import optuna
 from isaaclab.app import AppLauncher
+from optuna.pruners import MedianPruner
+from optuna.samplers import TPESampler
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Train an RL agent with skrl.")
@@ -68,7 +67,7 @@ parser.add_argument(
 
 
 # ------------------------------Hyper parameter optimization additions------------------------------
-    # Add optuna-specific CLI arguments
+# Add optuna-specific CLI arguments
 parser.add_argument("--n-trials", type=int, default=100, help="Number of optimization trials")
 parser.add_argument("--study-name", type=str, default="ppo_optimization", help="Name of the optimization study")
 
@@ -130,7 +129,6 @@ from isaaclab.utils.io import dump_pickle, dump_yaml
 from isaaclab_rl.skrl import SkrlVecEnvWrapper
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
-
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
 agent_cfg_entry_point = "skrl_cfg_entry_point" if algorithm in ["ppo"] else f"skrl_{algorithm}_cfg_entry_point"
@@ -153,14 +151,14 @@ def suggest_ppo_params(trial: optuna.Trial) -> dict:
 
 def objective(trial: optuna.Trial, env, base_agent_cfg: dict):
     """Optuna objective function for PPO optimization."""
-    
+
     # Get suggested hyperparameters
     ppo_params = suggest_ppo_params(trial)
-    
+
     # Update agent config with suggested parameters
     agent_cfg = base_agent_cfg.copy()
     agent_cfg["agent"]["seed"] = ppo_params["seed"]
-    agent_cfg["agent"]["learning_rate"] = ppo_params["learning_rate"] 
+    agent_cfg["agent"]["learning_rate"] = ppo_params["learning_rate"]
     agent_cfg["agent"]["batch_size"] = ppo_params["batch_size"]
     agent_cfg["agent"]["epochs"] = ppo_params["epochs"]
     agent_cfg["agent"]["gamma"] = ppo_params["gamma"]
@@ -179,7 +177,6 @@ def objective(trial: optuna.Trial, env, base_agent_cfg: dict):
     agent_cfg["agent"]["experiment"]["directory"] = log_root_path
     agent_cfg["agent"]["experiment"]["experiment_name"] = trial_dir
 
-
     # env_cfg.seed = ppo_params["seed"]
     # Create environment
 
@@ -187,11 +184,12 @@ def objective(trial: optuna.Trial, env, base_agent_cfg: dict):
     agent_cfg["trainer"]["timesteps"] = 1_000  # Reduce training time for optimization
     runner = Runner(env, agent_cfg)
     # runner.agent.set_running_mode("train")
-    
+
     # Train and get results
     try:
-        import tqdm
         import torch
+        import tqdm
+
         # take mean of three runs with same hyperparameters
         mean_reward = []
         for i in range(1):
@@ -224,38 +222,30 @@ def objective(trial: optuna.Trial, env, base_agent_cfg: dict):
                     if term.any() or trunc.any():
                         obs, _ = env.reset()
             # env.close()
-                
-            mean_reward.append(sum(rewards)/len(rewards))
+
+            mean_reward.append(sum(rewards) / len(rewards))
             trial.report(mean_reward[-1], i)
             if trial.should_prune():
                 raise optuna.TrialPruned()
-        final_reward = sum(mean_reward)/len(mean_reward)
-                    
-
- 
-          
-
+        final_reward = sum(mean_reward) / len(mean_reward)
 
         # for i, (iteration, evaluation) in enumerate(runner.run()):
         #     mean_reward = evaluation["eval/reward_mean"]
         #     rewards.append(mean_reward)
-            
+
         #     # Report intermediate results for pruning
         #     trial.report(mean_reward, i)
         #     if trial.should_prune():
         #         raise optuna.TrialPruned()
 
-        
     except Exception as e:
         print(f"Trial {trial.number} failed with error: {str(e)}")
-        final_reward = float('-inf')
-    
-    # finally:
+        final_reward = float("-inf")
+
+        # finally:
         env.close()
-        
+
     return final_reward
-
-
 
 
 @hydra_task_config(args_cli.task, agent_cfg_entry_point)
@@ -269,47 +259,37 @@ def main(env_cfg: DirectRLEnvCfg, agent_cfg: dict):
     if args_cli.distributed:
         env_cfg.sim.device = f"cuda:{app_launcher.local_rank}"
 
-   
     env = gym.make(args_cli.task, cfg=env_cfg)
     if isinstance(env.unwrapped, DirectMARLEnv) and algorithm in ["ppo"]:
         env = multi_agent_to_single_agent(env)
     env = SkrlVecEnvWrapper(env, ml_framework=args_cli.ml_framework)
 
-
-    
     # Add optuna-specific CLI arguments
     # parser.add_argument("--n-trials", type=int, default=100, help="Number of optimization trials")
     # parser.add_argument("--study-name", type=str, default="ppo_optimization", help="Name of the optimization study")
-    
+
     # Configure the study
     study = optuna.create_study(
         study_name=args_cli.study_name,
         direction="maximize",
         sampler=TPESampler(),
-        pruner=MedianPruner(n_startup_trials=5, n_warmup_steps=20)
+        pruner=MedianPruner(n_startup_trials=5, n_warmup_steps=20),
     )
-    
+
     # Run optimization
-    study.optimize(
-        lambda trial: objective(trial, env, agent_cfg),
-        n_trials=args_cli.n_trials,
-        catch=(Exception,)
-    )
-    
+    study.optimize(lambda trial: objective(trial, env, agent_cfg), n_trials=args_cli.n_trials, catch=(Exception,))
+
     # Print optimization results
     print("Best trial:")
     print(f"  Value: {study.best_trial.value}")
     print("  Params:")
     for key, value in study.best_trial.params.items():
         print(f"    {key}: {value}")
-        
+
     # Save study results
     study_dir = os.path.join("logs", "skrl", "optuna_studies")
     os.makedirs(study_dir, exist_ok=True)
-    study.trials_dataframe().to_csv(
-        os.path.join(study_dir, f"{args_cli.study_name}_results.csv")
-    )
-
+    study.trials_dataframe().to_csv(os.path.join(study_dir, f"{args_cli.study_name}_results.csv"))
 
 
 # @hydra_task_config(args_cli.task, agent_cfg_entry_point)

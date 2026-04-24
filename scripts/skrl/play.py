@@ -129,9 +129,9 @@ def main():
         experiment_cfg = load_cfg_from_registry(args_cli.task, f"skrl_{algorithm}_cfg_entry_point")
     except ValueError:
         experiment_cfg = load_cfg_from_registry(args_cli.task, "skrl_cfg_entry_point")
-    
+
     env_cfg.trajectory_type = args_cli.traj_type
-    
+
     # specify directory for logging experiments (load checkpoint)
     if args_cli.experiment is not None:
         experiment_cfg["agent"]["experiment"]["directory"] = args_cli.experiment

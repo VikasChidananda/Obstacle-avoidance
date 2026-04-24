@@ -12,7 +12,6 @@ from . import agents
 ##
 
 
-
 gym.register(
     id="Quadcontrol-v0",
     entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
@@ -32,6 +31,39 @@ gym.register(
     },
 )
 
+
+gym.register(
+    id="Quadcontrol-SymmAug-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugRunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-MirrorLoss-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOMirrorLossRunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-SymmAugMirror-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugMirrorLossRunnerCfg",
+    },
+)
+
 gym.register(
     id="Quadcontrol-Meta-v0",
     entry_point=f"{__name__}.quadcontrol_meta_traj:QuadcontrolEnv",
@@ -48,5 +80,3 @@ gym.register(
         "sb3_cfg_entry_point": f"{agents.__name__}:sb3_ppo_cfg.yaml",
     },
 )
-
-
