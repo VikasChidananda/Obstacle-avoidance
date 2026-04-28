@@ -132,3 +132,15 @@ gym.register(
         "skrl_reptile_cfg_entry_point": f"{agents.__name__}:skrl_reptile_cfg.yaml",
     },
 )
+
+
+gym.register(
+    id="Quadcontrol-DomainRand-v0",
+    entry_point=f"{__name__}.quadcontrol_domain_rand_env:QuadcontrolDomainRandEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_domain_rand_env_cfg:QuadcontrolDomainRandEnvCfg",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "skrl_a2c_domain_rand_cfg_entry_point": f"{agents.__name__}:skrl_a2c_domain_rand_cfg.yaml",
+    },
+)
