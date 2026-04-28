@@ -1,0 +1,123 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Interim Report: Symmetry-Based Augmentation for Quadrotor Hover Control}
+\author{SS26 Drone Control Project}
+\date{April 24, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report summarizes the symmetry-oriented reinforcement learning experiments completed so far for quadrotor hover control. We compare baseline PPO, augmentation-only variants, mirror-loss variants, and a new discretized yaw augmentation family ($C_n$). Results are reported from TensorBoard logs using the scalar \texttt{Train/mean\_reward}, aggregated as the mean of the last 50 logged points per run. The strongest and most stable performance is currently obtained by augmentation-only methods, especially in the $C_6$--$C_8$ range.
+\end{abstract}
+
+\section{Objective}
+The main objective is to evaluate whether symmetry-aware training improves data efficiency and final control quality relative to standard PPO in a hover task. The current hypothesis is that enforcing or exploiting yaw equivariance in data augmentation improves policy quality and robustness.
+
+\section{Experimental Setup}
+\begin{itemize}
+    \item Task family: quadrotor hover control (direct RL environment).
+    \item Algorithm: PPO-based training pipeline with symmetry options.
+    \item Primary logged metric: \texttt{Train/mean\_reward}.
+    \item Aggregation rule: for each run, compute
+    \[
+        R_{\text{final}} = \frac{1}{K}\sum_{i=1}^{K} r_i, \quad K=\min(50, N_{\text{logged}}),
+    \]
+    where $r_i$ are the final logged reward values.
+    \item Reporting: mean and standard deviation of $R_{\text{final}}$ across runs in each experiment group.
+\end{itemize}
+
+\section{Compared Variants}
+\begin{itemize}
+    \item \textbf{baselines}: PPO without symmetry augmentation.
+    \item \textbf{aug\_only}: augmentation-only symmetry variant.
+    \item \textbf{aug\_only\_c4}: fixed $C_4$ augmentation variant.
+    \item \textbf{mirror\_loss\_only}: mirror loss without augmentation.
+    \item \textbf{aug\_plus\_mirror\_loss}: combined augmentation and mirror loss.
+    \item \textbf{aug\_mirror}: legacy/combined family (as recorded in logs).
+\end{itemize}
+
+\section{Results: Family-Level Comparison}
+\begin{table}[H]
+\centering
+\caption{Final reward summary by experiment family (mean of last 50 points per run).}
+\begin{tabular}{lrrrrr}
+\toprule
+Family & Runs & Mean & Std & Min & Max \\
+\midrule
+baselines & 11 & 127.11 & 4.60 & 117.06 & 132.31 \\
+aug\_only & 11 & 131.41 & 2.26 & 125.71 & 133.97 \\
+aug\_only\_c4 & 11 & 131.30 & 1.59 & 127.28 & 132.66 \\
+mirror\_loss\_only & 3 & 124.44 & 4.59 & 118.61 & 129.82 \\
+aug\_plus\_mirror\_loss & 3 & 127.43 & 3.15 & 123.32 & 130.96 \\
+aug\_mirror & 12 & 122.74 & 13.42 & 98.85 & 133.97 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observation.}
+Augmentation-only methods currently outperform baseline PPO by approximately 4.2 reward points on average, while also reducing run-to-run variance. Mirror-loss-centric settings in the current form do not yet match augmentation-only performance.
+
+\section{Results: Discretized Yaw Augmentation ($C_n$ Ablation)}
+The new discretized-theta experiments are organized under \texttt{aug\_only\_theta} with classes $C_4$, $C_6$, $C_8$, and $C_{12}$.
+
+\begin{table}[H]
+\centering
+\caption{$C_n$ ablation summary (3 runs per class).}
+\begin{tabular}{lrrrrr}
+\toprule
+Class & Runs & Mean & Std & Min & Max \\
+\midrule
+$C_4$ & 3 & 130.85 & 1.05 & 129.36 & 131.65 \\
+$C_6$ & 3 & 131.29 & 0.41 & 130.73 & 131.70 \\
+$C_8$ & 3 & 131.28 & 1.25 & 130.02 & 132.98 \\
+$C_{12}$ & 3 & 126.90 & 2.84 & 123.36 & 130.33 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observation.}
+The current best region appears around $n\in\{6,8\}$, while $C_{12}$ underperforms and shows higher variability, suggesting over-discretization may hurt optimization in the present setup.
+
+\section{Figures}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../scripts/notebooks/log_figures/symmetry/training_reward_curves.png}
+    \caption{Training reward curves for baseline and symmetry families.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../scripts/notebooks/log_figures/symmetry/training_reward_curves_Cn.png}
+    \caption{Training reward curves for discretized yaw classes ($C_n$).}
+\end{figure}
+
+\section{Interpretation}
+\begin{itemize}
+    \item Symmetry augmentation is consistently beneficial over baseline in final training reward.
+    \item Fixed-group augmentation ($C_4$) remains strong, but moderate discretization ($C_6$, $C_8$) may provide a small additional gain.
+    \item Mirror-loss-heavy settings likely need further coefficient tuning and/or training-length tuning.
+\end{itemize}
+
+\section{Limitations}
+\begin{itemize}
+    \item Some families use fewer runs (e.g., 3), making estimates less certain.
+    \item The report uses a single scalar metric and does not yet include success-rate or robustness-to-disturbance evaluation.
+    \item Hyperparameters are not fully controlled across all historical runs.
+\end{itemize}
+
+\section{Planned Next Experiments}
+\begin{itemize}
+    \item Increase seeds for $C_n$ variants to at least 10 per class.
+    \item Perform a focused sweep around $n=4,6,8,10$ with fixed training budget.
+    \item Revisit mirror loss with coefficient sweeps under the same training horizon.
+    \item Add evaluation-time metrics (goal error distribution, disturbance recovery).
+\end{itemize}
+
+\end{document}

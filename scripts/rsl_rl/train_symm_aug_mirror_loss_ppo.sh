@@ -5,5 +5,7 @@ set -euo pipefail
 for seed in {0..10}; do
 	echo "[train_symm_aug_mirror_loss_ppo] Running seed=${seed}"
 	python train.py --task Quadcontrol-SymmAugMirror-v0 --headless --video "$@" --seed "${seed}" \
-		--max_iterations 300
+		--max_iterations 300 \
+		env.yaw_discretisations=8 
+		# agent.mirror_loss_coeff=0.2
 done

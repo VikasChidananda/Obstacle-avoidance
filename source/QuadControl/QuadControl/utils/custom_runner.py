@@ -24,26 +24,30 @@ class CustomRunner(Runner):
     def _component(self, name: str):  # type: ignore[override]
         # Map meta_ppo identifiers to PPO and its default config
         lname = name.lower()
-        if lname in ("ppo", "custom"):
+        if lname in ("ppo", "custom", "customppo"):
             # Reuse PPO components from skrl
             from QuadControl.meta_rl.algos.custom_ppo import CustomPPO
 
             print("Using CustomPPO")
             return CustomPPO
 
-        elif lname in ("spo"):
+        elif lname in ("spo",):
             from QuadControl.meta_rl.algos.spo import SPO
 
             print("Using SPO")
             return SPO
 
         # trainers
-        elif lname in ("metatrainer"):
-            # Reuse PPO components from skrl
-            from QuadControl.meta_rl.meta_trainer_maml import MetaTrainer
+        elif lname in ("metatrainer", "mamlmetatrainer"):
+            from QuadControl.meta_rl.meta_trainers import MAMLMetaTrainer
 
-            print("Using MetaTrainer")
-            return MetaTrainer
+            print("Using MAMLMetaTrainer")
+            return MAMLMetaTrainer
+        elif lname in ("reptilemetatrainer",):
+            from QuadControl.meta_rl.meta_trainers import ReptileMetaTrainer
+
+            print("Using ReptileMetaTrainer")
+            return ReptileMetaTrainer
         # fallback to the base resolution
         return super()._component(name)
 
@@ -183,7 +187,6 @@ class CustomRunner(Runner):
 
         if agent_class in ["custom", "spo"]:
             agent_id = possible_agents[0]
-            agent_cfg = self._component(f"PPO_DEFAULT_CONFIG").copy()
             agent_cfg = self._process_cfg(cfg["agent"])
             agent_cfg.get("state_preprocessor_kwargs", {}).update(
                 {"size": observation_spaces[agent_id], "device": device}
@@ -274,7 +277,7 @@ class CustomRunner(Runner):
         #     print(f"Agent kwargs: {agent_kwargs}")
         #     print(f"Agent cfg: {agent_cfg}")
 
-        return super._generate_agent(env, cfg, models)
+        return super()._generate_agent(env, cfg, models)
 
     def _generate_trainer(self, env, cfg, agent):
         """Generate trainer instance according to the environment specification and the given config and agent

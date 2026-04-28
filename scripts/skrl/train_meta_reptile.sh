@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+python "${SCRIPT_DIR}/train_meta.py" --meta_algo reptile --headless --video --max_iterations 300 \
+	--experiment "meta_reptile" \
+	"$@"

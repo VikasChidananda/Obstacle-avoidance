@@ -125,7 +125,7 @@ class PPOSymmAugMirrorLossRunnerCfg(PPORunnerCfg):
             use_data_augmentation=True,
             use_mirror_loss=True,
             data_augmentation_func=yaw_equivariant_augmentation,
-            mirror_loss_coeff=1.0,
+            mirror_loss_coeff=0.2,
         )
     )
 

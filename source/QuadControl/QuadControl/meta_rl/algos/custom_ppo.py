@@ -16,6 +16,8 @@ from skrl.memories.torch import Memory
 from skrl.models.torch import Model
 from skrl.resources.schedulers.torch import KLAdaptiveLR
 
+from .ppo_objectives import compute_policy_objective
+
 # This ppo has to create an update loop that
 #  preserves the computation graph for the inner loop updates, so that we can backprop through it in the outer loop.
 
@@ -31,6 +33,8 @@ class CustomPPO(PPO):
         cfg,
     ):
         self._update_mode = cfg.get("update_mode", "maml")  # "differentiable" or "standard"
+        self._policy_variant = str(cfg.get("policy_variant", "clip")).lower()
+        self._policy_variant_kwargs = cfg.get("policy_variant_kwargs", {}) or {}
         super().__init__(models, memory, observation_space, action_space, device, cfg)
 
     def compute_gae(
@@ -90,7 +94,7 @@ class CustomPPO(PPO):
         :param differentiable: Whether to preserve the computation graph for differentiable updates
         :type differentiable: bool
         """
-        print("Updating PPO...")
+        print(f"Updating PPO... variant={self._policy_variant}")
 
         # compute returns and advantages
         with torch.no_grad(), torch.autocast(device_type=self._device_type, enabled=self._mixed_precision):
@@ -215,7 +219,10 @@ class CustomPPO(PPO):
             # update learning rate
             if self._learning_rate_scheduler:
                 if isinstance(self.scheduler, KLAdaptiveLR):
-                    kl = torch.tensor(kl_divergences, device=self.device).mean()
+                    if kl_divergences:
+                        kl = torch.tensor(kl_divergences, device=self.device).mean()
+                    else:
+                        kl = torch.tensor(0.0, device=self.device)
                     # reduce (collect from all workers/processes) KL in distributed runs
                     if config.torch.is_distributed:
                         torch.distributed.all_reduce(kl, op=torch.distributed.ReduceOp.SUM)
@@ -263,12 +270,17 @@ class CustomPPO(PPO):
         else:
             entropy_loss = 0
 
-        # compute policy loss
-        ratio = torch.exp(next_log_prob - sampled_log_prob)
-        surrogate = sampled_advantages * ratio
-        surrogate_clipped = sampled_advantages * torch.clip(ratio, 1.0 - self._ratio_clip, 1.0 + self._ratio_clip)
-
-        policy_loss = -torch.min(surrogate, surrogate_clipped).mean()
+        policy_loss, policy_stats = compute_policy_objective(
+            variant=self._policy_variant,
+            old_log_prob=sampled_log_prob,
+            new_log_prob=next_log_prob,
+            advantages=sampled_advantages,
+            ratio_clip=self._ratio_clip,
+            variant_kwargs=self._policy_variant_kwargs,
+        )
+        kl_divergences.append(policy_stats["approx_kl"])
+        self.track_data("Policy / Approx KL", policy_stats["approx_kl"])
+        self.track_data("Policy / Clip fraction", policy_stats["clip_fraction"])
 
         # compute value loss
         predicted_values, _, _ = value.act({"states": sampled_states}, role="value")
@@ -367,7 +379,7 @@ class CustomPPO(PPO):
                 logs.append({
                     "policy_loss": policy_loss.item(),
                     "value_loss": value_loss.item(),
-                    "entropy_loss": entropy_loss,
+                    "entropy_loss": float(entropy_loss.item()) if torch.is_tensor(entropy_loss) else float(entropy_loss),
                 })
 
         return fpolicy, fvalue, logs
