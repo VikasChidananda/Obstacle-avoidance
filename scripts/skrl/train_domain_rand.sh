@@ -8,4 +8,5 @@ python "${SCRIPT_DIR}/train_domain_rand.py" \
     --video \
     --max_iterations 100000 \
     --experiment "domain_randomization" \
+    --num_envs 16 \
     "$@"

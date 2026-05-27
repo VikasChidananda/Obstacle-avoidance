@@ -97,6 +97,50 @@ gym.register(
     },
 )
 
+
+gym.register(
+    id="Quadcontrol-1DGoal-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolLineGoalEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-1DGoal-SymmAugMirror-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolLineGoalEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugMirrorLossRunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-3DGoal-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolRandomGoalEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-3DGoal-SymmAugMirror-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolRandomGoalEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOSymmAugMirrorLossRunnerCfg",
+    },
+)
+
 gym.register(
     id="Quadcontrol-Meta-v0",
     entry_point=f"{__name__}.quadcontrol_meta_env:QuadcontrolMetaEnv",
@@ -144,3 +188,52 @@ gym.register(
         "skrl_a2c_domain_rand_cfg_entry_point": f"{agents.__name__}:skrl_a2c_domain_rand_cfg.yaml",
     },
 )
+
+
+gym.register(
+    id="Quadcontrol-Obstacle-v0",
+    entry_point=f"{__name__}.quadcontrol_obstacle_env:QuadcontrolObstacleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_obstacle_env_cfg:QuadcontrolObstacleEnvCfg",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "sb3_cfg_entry_point": f"{agents.__name__}:sb3_ppo_cfg.yaml",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-ObstacleCurriculum-v0",
+    entry_point=f"{__name__}.quadcontrol_obstacle_env:QuadcontrolObstacleCurriculumEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_obstacle_env_cfg:QuadcontrolObstacleCurriculumEnvCfg",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "sb3_cfg_entry_point": f"{agents.__name__}:sb3_ppo_cfg.yaml",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-TerrainObstacle-v0",
+    entry_point=f"{__name__}.quadcontrol_terrain_obstacle_env:QuadcontrolTerrainObstacleEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_terrain_obstacle_env_cfg:QuadcontrolTerrainObstacleEnvCfg",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "sb3_cfg_entry_point": f"{agents.__name__}:sb3_ppo_cfg.yaml",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-Tree-v0",
+    entry_point=f"{__name__}.quadcontrol_tree_env:QuadcontrolTreeEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_tree_env_cfg:QuadcontrolTreeEnvCfg",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "sb3_cfg_entry_point": f"{agents.__name__}:sb3_ppo_cfg.yaml",
+    },
+)
+

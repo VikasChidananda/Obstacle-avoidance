@@ -18,7 +18,7 @@ from isaaclab.envs.ui import BaseEnvWindow
 from isaaclab.markers import VisualizationMarkers
 from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
 from isaaclab.utils import configclass
-from isaaclab.utils.math import sample_uniform, subtract_frame_transforms
+from isaaclab.utils.math import subtract_frame_transforms
 from isaacsim.core.utils.prims import create_prim
 
 # from isaacsim.core.utils.prims import create_prim
@@ -63,8 +63,7 @@ class QuadcontrolEnv(DirectRLEnv):
         # Goal position
         self._desired_pos_w = torch.zeros(self.num_envs, 3, device=self.device)
 
-        # self.eval_log = self.cfg.eval_log
-        self.eval_log = False  # Initialize to False
+        self.eval_log = getattr(self.cfg, "eval_log", False)
         if self.eval_log:
             self.eval_log_dir = Path(self.cfg.log_dir) / "eval_logs"
             self.eval_log_dir.mkdir(parents=True, exist_ok=True)
@@ -88,9 +87,11 @@ class QuadcontrolEnv(DirectRLEnv):
                 "lin_vel",
                 "ang_vel",
                 "distance_to_goal",
+                "total",
                 # "action_penalty"
             ]
         }
+        self._episode_init_distance = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
         # Get specific body indices
         self._body_id = self._robot.find_bodies("body")[0]
         self._robot_mass = self._robot.root_physx_view.get_masses()[0].sum()
@@ -100,6 +101,13 @@ class QuadcontrolEnv(DirectRLEnv):
         self.previous_actions = torch.zeros_like(self._actions, device=self.device)
         # add handle for debug visualization (this is set to a valid handle inside set_debug_vis)
         self.set_debug_vis(self.cfg.debug_vis)
+
+        self._hist_writer = None
+        self._hist_step = 0
+        # # if hasattr(self.cfg, "log_dir") and self.cfg.log_dir:
+        # hist_dir = Path(self.cfg.log_dir) / "env_histograms"
+        # hist_dir.mkdir(parents=True, exist_ok=True)
+        # self._hist_writer = SummaryWriter(log_dir=str(hist_dir))
 
     def _setup_scene(self):
         self._robot = Articulation(self.cfg.robot)
@@ -229,6 +237,7 @@ class QuadcontrolEnv(DirectRLEnv):
         # Logging
         for key, value in rewards.items():
             self._episode_sums[key] += value
+        self._episode_sums["total"] += reward
         return reward
 
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor]:
@@ -260,10 +269,15 @@ class QuadcontrolEnv(DirectRLEnv):
         # ).mean()
 
         extras = dict()
+        per_env_total_return = self._episode_sums["total"][env_ids].detach().cpu()
+        per_env_init_distance = self._episode_init_distance[env_ids].detach().cpu()
+        total_return_mean = torch.mean(self._episode_sums["total"][env_ids])
         for key in self._episode_sums.keys():
             episodic_sum_avg = torch.mean(self._episode_sums[key][env_ids])
             extras["Episode_Reward/" + key] = episodic_sum_avg / self.max_episode_length_s
             self._episode_sums[key][env_ids] = 0.0
+        extras["Episode_Return/total"] = total_return_mean
+        extras["Metrics/initial_distance_to_goal"] = torch.mean(self._episode_init_distance[env_ids])
         self.extras["log"] = dict()
         # self.extras["log"].update(extras)
 
@@ -274,6 +288,19 @@ class QuadcontrolEnv(DirectRLEnv):
         if self.verbose:
             print(f"logging extras on reset: {extras}")
         self.extras["log"].update(extras)
+
+        if self._hist_writer is not None:
+            self._hist_writer.add_histogram(
+                "Episode_Return/total_per_env",
+                per_env_total_return,
+                self._hist_step,
+            )
+            self._hist_writer.add_histogram(
+                "Metrics/initial_distance_to_goal_per_env",
+                per_env_init_distance,
+                self._hist_step,
+            )
+            self._hist_step += 1
         self._robot.reset(env_ids)
         super()._reset_idx(env_ids)
 
@@ -282,10 +309,17 @@ class QuadcontrolEnv(DirectRLEnv):
             self.episode_length_buf = torch.randint_like(self.episode_length_buf, high=int(self.max_episode_length))
 
         self._actions[env_ids] = 0.0
-        # Sample new commands
-        self._desired_pos_w[env_ids, :2] = torch.zeros_like(self._desired_pos_w[env_ids, :2]).uniform_(-2.0, 2.0)
-        self._desired_pos_w[env_ids, :2] += self._terrain.env_origins[env_ids, :2]
-        self._desired_pos_w[env_ids, 2] = torch.zeros_like(self._desired_pos_w[env_ids, 2]).uniform_(0.5, 2)
+        # Sample new goal positions in the local environment frame and shift by each env origin.
+        goal_min = torch.tensor(
+            [self.cfg.goal_sample_x_range[0], self.cfg.goal_sample_y_range[0], self.cfg.goal_sample_z_range[0]],
+            device=self.device,
+        )
+        goal_max = torch.tensor(
+            [self.cfg.goal_sample_x_range[1], self.cfg.goal_sample_y_range[1], self.cfg.goal_sample_z_range[1]],
+            device=self.device,
+        )
+        self._desired_pos_w[env_ids] = goal_min + (goal_max - goal_min) * torch.rand(len(env_ids), 3, device=self.device)
+        self._desired_pos_w[env_ids] += self._terrain.env_origins[env_ids]
         # Reset robot state
         joint_pos = self._robot.data.default_joint_pos[env_ids]
         joint_vel = self._robot.data.default_joint_vel[env_ids]
@@ -295,6 +329,11 @@ class QuadcontrolEnv(DirectRLEnv):
         self._robot.write_root_pose_to_sim(default_root_state[:, :7], env_ids)
         self._robot.write_root_velocity_to_sim(default_root_state[:, 7:], env_ids)
         self._robot.write_joint_state_to_sim(joint_pos, joint_vel, None, env_ids)
+
+        init_distance = torch.linalg.norm(
+            self._desired_pos_w[env_ids, :2] - default_root_state[:, :2], dim=1
+        )
+        self._episode_init_distance[env_ids] = init_distance
 
     def _set_debug_vis_impl(self, debug_vis: bool):
         # create markers if necessary for the first tome

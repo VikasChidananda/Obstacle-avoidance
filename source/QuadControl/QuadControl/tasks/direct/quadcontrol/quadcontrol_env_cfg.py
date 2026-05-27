@@ -48,7 +48,7 @@ class QuadcontrolEnvWindow(BaseEnvWindow):
 class QuadcontrolEnvCfg(DirectRLEnvCfg):
     # env
     decimation = 4
-    episode_length_s = 10.0
+    episode_length_s = 20.0
 
     # - spaces definition
     action_space = 4
@@ -94,6 +94,11 @@ class QuadcontrolEnvCfg(DirectRLEnvCfg):
     moment_scale = 0.01
     yaw_discretisations = 4
 
+    # goal sampling in the local environment frame
+    goal_sample_x_range = (0.0, 4.0)
+    goal_sample_y_range = (0.0, 4.0)
+    goal_sample_z_range = (0.5, 2.0)
+
     # reward scales
     lin_vel_reward_scale = -0.05
     ang_vel_reward_scale = -0.01
@@ -107,3 +112,23 @@ class QuadcontrolEnvCfg(DirectRLEnvCfg):
     # desired_pos_x = [-2.0, 2.0]
     # desired_pos_y = [-2.0, 2.0]
     # desired_pos_z = [0.5, 1.5]
+
+
+@configclass
+class QuadcontrolLineGoalEnvCfg(QuadcontrolEnvCfg):
+    """Training config that samples goals on a 1D line segment."""
+
+    goal_sample_x_range = (0.0, 2.0)
+    goal_sample_y_range = (0.0, 0.0)
+    goal_sample_z_range = (1.0, 1.0)
+    eval_log = False
+
+
+@configclass
+class QuadcontrolRandomGoalEnvCfg(QuadcontrolEnvCfg):
+    """Evaluation config that samples goals in full 3D."""
+
+    goal_sample_x_range = (0.0, 4.0)
+    goal_sample_y_range = (0.0, 4.0)
+    goal_sample_z_range = (0.5, 2.0)
+    eval_log = True
