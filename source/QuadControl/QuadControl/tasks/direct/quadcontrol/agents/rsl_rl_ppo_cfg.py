@@ -131,5 +131,36 @@ class PPOSymmAugMirrorLossRunnerCfg(PPORunnerCfg):
 
 
 @configclass
+class PPOQuadrantSymmAugMirrorRunnerCfg(PPORunnerCfg):
+    """Train on 1st-quadrant goals with C4 augmentation + mirror loss.
+
+    Uses the full C4 yaw group (0/90/180/270 deg) as data augmentation so the
+    policy sees the 1st quadrant mapped onto every other quadrant, and adds a
+    mirror loss to enforce equivariant action predictions.
+    """
+
+    experiment_name = "symmetry/quadrant_generalize"
+    algorithm = _base_ppo_algorithm_cfg().replace(
+        symmetry_cfg=RslRlSymmetryCfg(
+            use_data_augmentation=True,
+            use_mirror_loss=True,
+            data_augmentation_func=yaw_equivariant_augmentation_c4,
+            mirror_loss_coeff=0.2,
+        )
+    )
+
+
+@configclass
+class PPOFull3DSymmAugMirrorRunnerCfg(PPOQuadrantSymmAugMirrorRunnerCfg):
+    """Evaluation config for the quadrant-generalisation experiment.
+
+    Shares ``experiment_name`` with the training config so the eval script can
+    locate the checkpoint produced by ``Quadcontrol-QuadrantGoal-SymmAugMirror-v0``.
+    """
+
+    experiment_name = "symmetry/quadrant_generalize"
+
+
+@configclass
 class PPOSymmRunnerCfg(PPOSymmAugRunnerCfg):
     """Backward-compatible alias for older experiment scripts."""

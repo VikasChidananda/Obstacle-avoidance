@@ -141,6 +141,28 @@ gym.register(
     },
 )
 
+
+gym.register(
+    id="Quadcontrol-QuadrantGoal-SymmAugMirror-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolQuadrantGoalEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOQuadrantSymmAugMirrorRunnerCfg",
+    },
+)
+
+
+gym.register(
+    id="Quadcontrol-Full3DGoal-SymmAugMirror-v0",
+    entry_point=f"{__name__}.quadcontrol_env:QuadcontrolEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.quadcontrol_env_cfg:QuadcontrolFull3DGoalEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPOFull3DSymmAugMirrorRunnerCfg",
+    },
+)
+
 gym.register(
     id="Quadcontrol-Meta-v0",
     entry_point=f"{__name__}.quadcontrol_meta_env:QuadcontrolMetaEnv",

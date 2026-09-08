@@ -63,6 +63,12 @@ class QuadcontrolEnv(DirectRLEnv):
         # Goal position
         self._desired_pos_w = torch.zeros(self.num_envs, 3, device=self.device)
 
+        # Per-env evaluation bookkeeping: goal (local frame) and final distance
+        # to goal of the most recently completed episode. Populated in
+        # `_reset_idx` before goals are re-sampled.
+        self._eval_goal_local = torch.zeros(self.num_envs, 3, device=self.device)
+        self._eval_final_dist = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+
         self.eval_log = getattr(self.cfg, "eval_log", False)
         if self.eval_log:
             self.eval_log_dir = Path(self.cfg.log_dir) / "eval_logs"
@@ -261,9 +267,13 @@ class QuadcontrolEnv(DirectRLEnv):
             env_ids = self._robot._ALL_INDICES
 
         # Logging
-        final_distance_to_goal = torch.linalg.norm(
+        per_env_final_distance = torch.linalg.norm(
             self._desired_pos_w[env_ids] - self._robot.data.root_pos_w[env_ids], dim=1
-        ).mean()
+        )
+        # Per-env evaluation bookkeeping (before goals are re-sampled below)
+        self._eval_goal_local[env_ids] = self._desired_pos_w[env_ids] - self._terrain.env_origins[env_ids]
+        self._eval_final_dist[env_ids] = per_env_final_distance
+        final_distance_to_goal = per_env_final_distance.mean()
         # vel_error = torch.linalg.norm(
         #     self._robot.data.root_lin_vel_b[env_ids] - self._desired_vel_w[env_ids], dim=1
         # ).mean()

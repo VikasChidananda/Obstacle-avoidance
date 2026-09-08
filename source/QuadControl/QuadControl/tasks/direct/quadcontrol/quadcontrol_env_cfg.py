@@ -132,3 +132,34 @@ class QuadcontrolRandomGoalEnvCfg(QuadcontrolEnvCfg):
     goal_sample_y_range = (0.0, 4.0)
     goal_sample_z_range = (0.5, 2.0)
     eval_log = True
+
+
+@configclass
+class QuadcontrolQuadrantGoalEnvCfg(QuadcontrolEnvCfg):
+    """Training config that samples goals only from the 1st quadrant.
+
+    Goals are restricted to x >= 0, y >= 0 (the positive quadrant in the
+    xy-plane) so the agent never sees goals in the other three quadrants
+    during training. Generalisation is then evaluated with
+    ``QuadcontrolFull3DGoalEnvCfg``.
+    """
+
+    goal_sample_x_range = (0.0, 4.0)
+    goal_sample_y_range = (0.0, 4.0)
+    goal_sample_z_range = (0.5, 2.0)
+    eval_log = False
+
+
+@configclass
+class QuadcontrolFull3DGoalEnvCfg(QuadcontrolEnvCfg):
+    """Evaluation config that samples goals across the full xy-plane.
+
+    Goals span x in [-4, 4] and y in [-4, 4], i.e. all four quadrants of the
+    goal space. Used to measure generalisation of a policy trained only on
+    1st-quadrant goals.
+    """
+
+    goal_sample_x_range = (-4.0, 4.0)
+    goal_sample_y_range = (-4.0, 4.0)
+    goal_sample_z_range = (0.5, 2.0)
+    eval_log = True
